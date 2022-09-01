@@ -30,12 +30,26 @@
           # Make it output to the terminal instead of separate window
           virtualisation.graphics = false;
         };
+      withStoreImage = {
+        virtualisation.useNixStoreImage = true;
+        virtualisation.writableStore = true;
+      };
     };
     nixosConfigurations = {
       vm-x86_64 = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           self.nixosModules.vm
+          {
+            virtualisation.host.pkgs = nixpkgs.legacyPackages.x86_64-darwin;
+          }
+        ];
+      };
+      vm-x86_64-storeImage = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          self.nixosModules.vm
+          self.nixosModules.withStoreImage
           {
             virtualisation.host.pkgs = nixpkgs.legacyPackages.x86_64-darwin;
           }
@@ -50,9 +64,21 @@
           }
         ];
       };
+      vm-aarch64-storeImage = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          self.nixosModules.vm
+          self.nixosModules.withStoreImage
+          {
+            virtualisation.host.pkgs = nixpkgs.legacyPackages.aarch64-darwin;
+          }
+        ];
+      };
     };
     packages.x86_64-darwin.default = self.nixosConfigurations.vm-x86_64.config.system.build.vm;
+    packages.x86_64-darwin.withStoreImage = self.nixosConfigurations.vm-x86_64-storeImage.config.system.build.vm;
     packages.aarch64-darwin.default = self.nixosConfigurations.vm-aarch64.config.system.build.vm;
+    packages.aarch64-darwin.withStoreImage = self.nixosConfigurations.vm-aarch64-storeImage.config.system.build.vm;
   };
 
   nixConfig = {

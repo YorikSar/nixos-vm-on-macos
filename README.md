@@ -99,6 +99,29 @@ should stick to running `aarch64-linux` VM on your machine. To do so, add
 `--system aarch64-darwin` to your `nix run` and it will pick up the right
 package.
 
+### Broken sudo
+
+```
+[test@nixos:~]$ sudo poweroff
+sudo: error in /etc/sudo.conf, line 0 while loading plugin "sudoers_policy"
+sudo: /nix/store/kkn64rx0ns1kv8yadwclnwrny29n6inj-sudo-1.9.11p3/libexec/sudo/sudoers.so must be owned by uid 0
+sudo: fatal error, unable to load plugins
+```
+
+This probably means that you're using single-user (daemon-less) Nix
+installation and all `/nix/store` paths are owned by you instead of root. By
+default, VM shares `/nix/store` with the host, so things like `sudoers.so` ends
+up with wrong permissions. This can be fixed by using a qcow image with all
+necessary store path for the VM. There's a special output that has already been
+build and cached for this. To use it, run
+
+```
+nix run github:YorikSar/nixos-vm-on-macos#withStoreImage
+```
+
+Note that it will download the image from the cache for you that weight about
+1Gb.
+
 ### There's a different issue
 
 Feel free to ask about it in 
